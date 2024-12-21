@@ -5,7 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 from bot.config import settings, bot
-from bot.dao.dao import UserDAO, ProductDao, CategoryDao
+from bot.dao.dao import UserDAO, ProductDao, CategoryDao, PurchaseDao
 from bot.admin.kbs import admin_kb, admin_kb_back, product_management_kb, cancel_kb_inline, catalog_admin_kb, \
     admin_send_file_kb, admin_confirm_kb, dell_product_kb
 from bot.admin.schemas import ProductModel, ProductIDModel
@@ -39,14 +39,14 @@ async def admin_statistic(call: CallbackQuery, session_without_commit: AsyncSess
     await call.answer('📊 Собираем статистику...')
 
     stats = await UserDAO.get_statistics(session=session_without_commit)
-
+    total_summ = await PurchaseDao.get_full_summ(session=session_without_commit)
     stats_message = (
         "📈 Статистика пользователей:\n\n"
         f"👥 Всего пользователей: {stats['total_users']}\n"
         f"🆕 Новых за сегодня: {stats['new_today']}\n"
         f"📅 Новых за неделю: {stats['new_week']}\n"
         f"📆 Новых за месяц: {stats['new_month']}\n\n"
-        f"💰 Общая сумма заказов: 0 руб.\n\n"
+        f"💰 Общая сумма заказов: {total_summ} руб.\n\n"
         "🕒 Данные актуальны на текущий момент."
     )
     await call.message.edit_text(

@@ -83,7 +83,6 @@ async def successful_payment(message: Message, session_with_commit: AsyncSession
         'price': payment_info.total_amount / 100,
         'product_id': int(product_id)
     }
-    print(payment_data)
     # Добавляем информацию о покупке в базу данных
     await PurchaseDao.add(session=session_with_commit, values=PaymentData(**payment_data))
     product_data = await ProductDao.find_one_or_none_by_id(session=session_with_commit, data_id=int(product_id))
@@ -91,11 +90,13 @@ async def successful_payment(message: Message, session_with_commit: AsyncSession
     # Формируем уведомление администраторам
     for admin_id in settings.ADMIN_IDS:
         try:
+            username = message.from_user.username
+            user_info = f"@{username} ({message.from_user.id})" if username else f"c ID {message.from_user.id}"
+
             await bot.send_message(
                 chat_id=admin_id,
                 text=(
-                    f"💲 Пользователь @{message.from_user.username} ({message.from_user.id}) "
-                    f"купил товар <b>{product_data.name}</b> (ID: {product_id}) "
+                    f"💲 Пользователь {user_info} купил товар <b>{product_data.name}</b> (ID: {product_id}) "
                     f"за <b>{product_data.price} ₽</b>."
                 )
             )
